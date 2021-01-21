@@ -15,6 +15,7 @@ import os.path as osp, time, atexit, os
 import warnings
 from spinup.utils.mpi_tools import proc_id, mpi_statistics_scalar
 from spinup.utils.serialization_utils import convert_json
+import wandb
 
 color2num = dict(
     gray=30,
@@ -286,11 +287,16 @@ class Logger:
             fmt = "| " + keystr + "s | %15s |"
             n_slashes = 22 + max_key_len
             print("-"*n_slashes)
+            
             for key in self.log_headers:
                 val = self.log_current_row.get(key, "")
                 valstr = "%8.3g"%val if hasattr(val, "__float__") else val
                 print(fmt%(key, valstr))
                 vals.append(val)
+            
+            # wandb logging can be done here
+            val_dict = {k:v for k,v in zip(self.log_headers,vals)}
+            wandb.log(val_dict,step=val_dict['Epoch'])
             print("-"*n_slashes, flush=True)
             if self.output_file is not None:
                 if self.first_row:
