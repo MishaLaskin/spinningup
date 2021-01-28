@@ -7,6 +7,13 @@ import gym
 import time
 import spinup.algos.pytorch.sac.core as core
 from spinup.utils.logx import EpochLogger
+import dmc2gym
+import os 
+import wandb
+
+
+# tmp
+os.environ['DISABLE_MUJOCO_RENDERING'] = '1'
 
 
 class ReplayBuffer:
@@ -143,6 +150,7 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
             the current policy and value function.
 
     """
+    wandb.init(project='sac')
 
     logger = EpochLogger(**logger_kwargs)
     logger.save_config(locals())
@@ -350,7 +358,12 @@ def sac(env_fn, actor_critic=core.MLPActorCritic, ac_kwargs=dict(), seed=0,
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, default='HalfCheetah-v2')
+    parser.add_argument('--env', type=str, default='MountainCarContinuous-v0')
+    parser.add_argument('--domain_name', type=str, default='quadruped')
+    parser.add_argument('--task_name', type=str, default='run')
+    parser.add_argument('--dmc', type=bool, default=True)
+    parser.add_argument('--sweep', type=bool, default=True)
+    parser.add_argument('--video', type=bool, default=False)
     parser.add_argument('--hid', type=int, default=256)
     parser.add_argument('--l', type=int, default=2)
     parser.add_argument('--gamma', type=float, default=0.99)
@@ -364,7 +377,15 @@ if __name__ == '__main__':
 
     torch.set_num_threads(torch.get_num_threads())
 
-    sac(lambda : gym.make(args.env), actor_critic=core.MLPActorCritic,
-        ac_kwargs=dict(hidden_sizes=[args.hid]*args.l), 
-        gamma=args.gamma, seed=args.seed, epochs=args.epochs,
-        logger_kwargs=logger_kwargs)
+    if args.dmc:
+        sac(lambda : dmc2gym.make(domain_name=args.domain_name, task_name=args.task_name, seed=args.seed),
+            actor_critic=core.MLPActorCritic,
+            ac_kwargs=dict(hidden_sizes=[args.hid]*args.l), 
+            gamma=args.gamma, seed=args.seed, epochs=args.epochs,
+            logger_kwargs=logger_kwargs)
+
+    else:
+        sac(lambda : gym.make(args.env), actor_critic=core.MLPActorCritic,
+            ac_kwargs=dict(hidden_sizes=[args.hid]*args.l), 
+            gamma=args.gamma, seed=args.seed, epochs=args.epochs,
+            logger_kwargs=logger_kwargs)
