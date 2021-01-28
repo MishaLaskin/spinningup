@@ -1,0 +1,25 @@
+program: ppo.py
+method: random
+metric:
+  name: AverageEpRet
+  goal: maximize
+parameters:
+  gamma:
+    values: [.99,.995,.999]
+  clip_ratio:
+    values: [.1,.15,.2,.25]
+  pi_lr:
+    values: [0.0001, 0.0003, 0.0005]
+  vf_lr:
+    values: [0.0001, 0.001, 0.01]
+  lam:
+    values: [.97,.99]
+  target_kl:
+    values: [0.005, 0.01, 0.02]
+  epochs:
+    value: 100
+early_terminate:
+  type: hyperband
+  s: 2
+  eta: 3
+  min_iter: 100
